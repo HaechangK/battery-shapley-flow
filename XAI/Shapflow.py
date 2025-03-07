@@ -378,6 +378,10 @@ class SHAPflow():
             pickle.dump(self.SH.result, handle, protocol=pickle.HIGHEST_PROTOCOL)
         self.add_info = f' SHAPflow_boundary_{self.rank_boundary}'
 
+        nodenames_splitted = [nodename.split('_', 1) for nodename in self.SH.result.feature_names]
+        nodenames = [f'${prefix}_{{{num}}}$' for prefix, num in nodenames_splitted]
+        self.SH.result.feature_names = nodenames
+
         self.SH.SHAP_plot(visuals=visuals,
                           add_info=self.add_info,
                           max_display = max_display)
