@@ -5,7 +5,7 @@ from Virtual_dataset import *
 now = time.time()
 
 # %% Basic arguments
-BENCHMARK = True
+BENCHMARK = False
 SHAPFLOW_INTERPRET = True
 TARGET = 'Virtual - battery'
 
@@ -17,6 +17,7 @@ DROPOUT = 0.0
 # %% Random seed for reproducibility
 np.random.seed(21)
 seeds = np.random.randint(10000, size=20)
+seed = seeds[0]
 
 # %%
 # if __name__ == '__main__':
@@ -70,7 +71,7 @@ for seed in seeds:
 
         edge_credit = SHF.Graph_explain()
         importance_matrix = SHF.importance_matrix(edge_credit)
-        # SHF.draw_graph()
+        SHF.draw_graph(max_display = 20)
 
         # %%
         rank_boundaries = [0, -1]
