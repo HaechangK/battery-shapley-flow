@@ -30,7 +30,7 @@ plt.rcParams["mathtext.fontset"] = "dejavuserif"
 class SHAPflow():
     def __init__(self, X, y, n_bg, nsamples, nruns, target, feature_mask = False):
         """
-        Args:
+        :argument
             X: [pd.DataFrame] Data to be interpreted
             y: [pd.Series] Vector of target variables
             n_bg: [int] Number of background samples, for comparison
@@ -66,14 +66,14 @@ class SHAPflow():
         """
         This function makes dataset generated from graph structure that resembles the sequential batch process.
         For easy clarification, linear relation is preferred.
-        Returns:
-            self.causal_graph
+        :returns
+            self.causal_graph: [Graph object]
         """
-        PPs_A_Cathode = [name for name in self.X.columns if 'PP_A_Cat' in name]
-        IPFs_A_Cathode = [name for name in self.X.columns if 'IPF_A_Cat' in name]
+        PPs_A_Cathode = [name for name in self.X.columns if 'PP_A:Cat' in name]
+        IPFs_A_Cathode = [name for name in self.X.columns if 'IPF_A:Cat' in name]
 
-        PPs_A_Anode = [name for name in self.X.columns if 'PP_A_An' in name]
-        IPFs_A_Anode = [name for name in self.X.columns if 'IPF_A_An' in name]
+        PPs_A_Anode = [name for name in self.X.columns if 'PP_A:An' in name]
+        IPFs_A_Anode = [name for name in self.X.columns if 'IPF_A:An' in name]
 
         PPs_B = [name for name in self.X.columns if 'PP_B' in name]
         IPFs_B = [name for name in self.X.columns if 'IPF_B' in name]
@@ -86,21 +86,21 @@ class SHAPflow():
         causal_links = CausalLinks()
 
         m1 = XGBRegressor(n_estimators=10)
-        m1.fit(self.X_train[PPs_A_Cathode], self.X_train['IPF_A_Cat1'])
-        r21 = r2_score(self.X_test['IPF_A_Cat1'], m1.predict(self.X_test[PPs_A_Cathode]))
+        m1.fit(self.X_train[PPs_A_Cathode], self.X_train['IPF_A:Cat1'])
+        r21 = r2_score(self.X_test['IPF_A:Cat1'], m1.predict(self.X_test[PPs_A_Cathode]))
         print("R2 Score Train: {:.3f}".format(
-            r2_score(self.X_train['IPF_A_Cat1'], m1.predict(self.X_train[PPs_A_Cathode]))))
+            r2_score(self.X_train['IPF_A:Cat1'], m1.predict(self.X_train[PPs_A_Cathode]))))
         print("R2 Score Test : {:.3f}".format(r21))
-        causal_links.add_causes_effects(causes=PPs_A_Cathode, effects=['IPF_A_Cat1'],
+        causal_links.add_causes_effects(causes=PPs_A_Cathode, effects=['IPF_A:Cat1'],
                                         models=create_xgboost_f(PPs_A_Cathode, m1, output_margin=True))
 
         m2 = XGBRegressor(n_estimators=10)
-        m2.fit(self.X_train[PPs_A_Anode], self.X_train['IPF_A_An1'])
-        r22 = r2_score(self.X_test['IPF_A_An1'], m2.predict(self.X_test[PPs_A_Anode]))
+        m2.fit(self.X_train[PPs_A_Anode], self.X_train['IPF_A:An1'])
+        r22 = r2_score(self.X_test['IPF_A:An1'], m2.predict(self.X_test[PPs_A_Anode]))
         print(
-            "R2 Score Train: {:.3f}".format(r2_score(self.X_train['IPF_A_An1'], m2.predict(self.X_train[PPs_A_Anode]))))
+            "R2 Score Train: {:.3f}".format(r2_score(self.X_train['IPF_A:An1'], m2.predict(self.X_train[PPs_A_Anode]))))
         print("R2 Score Test : {:.3f}".format(r22))
-        causal_links.add_causes_effects(causes=PPs_A_Anode, effects=['IPF_A_An1'],
+        causal_links.add_causes_effects(causes=PPs_A_Anode, effects=['IPF_A:An1'],
                                         models=create_xgboost_f(PPs_A_Anode, m2, output_margin=True))
 
         m3 = XGBRegressor(n_estimators=10)
@@ -144,27 +144,14 @@ class SHAPflow():
 
         return self.causal_graph
 
-    def dropout_links(self, causal_links, dropout_rate=0.2):
-        """
-        Randomly mutes edges in the causal_links.
-        Args:
-            causal_links: [list] A list of tuples representing causal links (e.g., [('A', 'B'), ('B', 'C')]).
-            dropout_rate: [float] The probability of each edge being 'muted'.
-        Returns:
-            new_causal_links: [list] A new list of causal_links with some edges 'muted'.
-        """
-        num_causal_links = len(causal_links.items)-1
-        num_links_to_mute = int(dropout_rate * num_causal_links)
-        index_to_mute = random.sample(range(num_causal_links), num_links_to_mute)
-        new_causal_links = [causal_links.items[index] for index in range(len(causal_links.items)) if index not in index_to_mute]
-        return new_causal_links
-
     # %% Graph Explainer
     def Graph_explain(self, source = None):
         """
         Assigns attributions through edges of causal graphs
-        Args:
+        :argument
             source: [list] List that contains strings of source nodes
+        :returns
+            self.edge_credit: [FlowDefaultDict] Interpretation results of each edge
         """
         # Multiple background result with individual run
         causal_edge_credits = []
@@ -187,7 +174,7 @@ class SHAPflow():
     def draw_graph(self, max_display = 10, source = ''):
         """
         Draws the causal graph computed edge attributions
-        Args:
+        :argument
             max_display: [int] Maximum number of edges displayed
             source: [str] Name of the source node to be interpreted
         """
@@ -204,10 +191,10 @@ class SHAPflow():
     def importance_matrix(self, edge_credit, remove_noise = True):
         """
         Returns importance matrix given attribution values of edges.
-        Args:
+        :argument
             edge_credit: [Edge credit object] Embodies attributions of each edge
             remove_noise: [Bool] Whether to remove noise in importance matrix calculation
-        Returns:
+        :returns
             self.edge_importance_matrix: [np.ndarray] Importance matrix
         """
         print("Extracting importance matrix...", end = '')
@@ -251,7 +238,7 @@ class SHAPflow():
     def load_importance_matrix(self):
         """
         Loads saved importance matrix
-        Returns:
+        :returns
             self.edge_importance_matrix: [np.ndarray] Importance matrix
         """
         print("Loading importance matrix...", end = '')
@@ -266,7 +253,7 @@ class SHAPflow():
     def plot_importance_matrix(self, maxshow = None):
         """
         Plots importance matrix
-        Args:
+        :argument
             maxshow: [None or int] Maximum number of features to show, sorted by sum of importances
         """
         mean_matrix = np.mean(np.absolute(self.edge_importance_matrix), axis=0)
@@ -332,9 +319,9 @@ class SHAPflow():
     def explanation_boundary(self, rank_boundary):
         """
         Returns 1D vector of importance from importance matrix, based on definition of rank boundary
-        Args:
+        :argument
             rank_boundary: [int] Rank boundary. e.g) 0: Root cause boundary, -1: Direct boundary
-        Returns:
+        :returns
             boundary_importance: [np.ndarray] 1D vector of attribution results
         """
         print("Extracting explanations for certain boundary..." , end = '')
@@ -391,7 +378,7 @@ class SHAPflow():
     def save_agraph(self, G):
         """
         Saves AGraph object
-        Args:
+        :argument
             G: [AGraph object]
         """
         print("Saving AGraph object...", end = '')
@@ -405,9 +392,9 @@ class SHAPflow():
     def load_agraph(self, savename):
         """
         Loads AGraph object
-        Args:
+        :argument
             savename: [str] Saved directory
-        Returns:
+        :returns
             loaded_graph: [AGraph object]
         """
         from pygraphviz import AGraph
@@ -422,9 +409,9 @@ class SHAPflow():
     def node2str(self, graph):
         """
         Generates dictionary that brings nodes from node names
-        Args:
+        :argument
             graph: [AGraph object] Causal graph
-        Returns:
+        :returns
             n2s: [dict] Dictionary that brings nodes from node names
         """
         n2s = dict()

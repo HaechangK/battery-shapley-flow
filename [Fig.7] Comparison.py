@@ -1,3 +1,7 @@
+"""
+Codes for generating Figure 7.
+Should have run the Main.py code for at least one time for each noise parameter.
+"""
 from utils import *
 from Virtual_dataset import *
 from matplotlib.patches import Patch
@@ -17,7 +21,7 @@ plt.rcParams["mathtext.fontset"] = "dejavuserif"
 
 # %% Main arguments
 TARGET = 'Virtual - battery'
-NOISE = 0.4
+NOISE = 0.0
 
 # %% Retrieve and unpickle the lists
 list_of_files = [file for file in os.listdir(data_dir + f'/{TARGET}_{NOISE}')]

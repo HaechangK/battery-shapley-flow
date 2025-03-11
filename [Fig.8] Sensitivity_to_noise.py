@@ -1,3 +1,7 @@
+"""
+Codes for generating Figure 8.
+Should have run the [Fig.7] Comparison.py code for at least one time for each noise parameter.
+"""
 from utils import *
 from matplotlib.patches import Patch
 
@@ -146,7 +150,6 @@ shap_abs_indirect_stds = np.array(shap_abs_indirect_stds)
 lime_abs_indirect_stds = np.array(lime_abs_indirect_stds)
 ig_abs_indirect_stds = np.array(ig_abs_indirect_stds)
 
-# noises = [0.0, 0.05, 0.1, 0.15, 0.2]
 noises = [0.0, 0.1, 0.2, 0.3, 0.4]
 
 # %% Direct errors plot

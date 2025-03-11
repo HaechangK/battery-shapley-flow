@@ -4,12 +4,29 @@ from utils import *
 def generate_dataset(num_data, sigma, seed = 1234):
     """
     For easy identification of ground truth, we link the nodes with linear equations
+    :param
+        num_data: [int] Number of total data we generate
+        sigma: [float] Standard deviation of Gaussian noise for each IPFs
+        seed: [int] random seed
+    :returns
+        X: [pd.DataFrame] Generated X
+        y: [pd.Series] Generated y
+        gt_direct: [list] Ground truth attributions for direct boundary
+        gt_indirect: [list] Ground truth attributions for indirect boundary
     """
     np.random.seed(seed)
     print(f"Generating virtual dataset...", end = '')
 
     # Function to simulate IPF calculation for a generic process stage
     def calculate_ipf(*args):
+        """
+        Function that simulates IPF calculation using linear combinations
+        :param
+            args: PPs and previous IPFs values, with the last argument being the noise scale
+        :return:
+            IPF: [np.ndarray] Calculated IPF
+            weights: [np.ndarray] Linear weights
+        """
         # args are the PPs and previous IPFs, with the last argument being the noise scale
         noise_scale = args[-1]
         weights = np.random.normal(1.0, scale = 0.5, size = (len(args)-1))
@@ -30,12 +47,12 @@ def generate_dataset(num_data, sigma, seed = 1234):
 
     # Create DataFrame with PPs and IPFs
     X = pd.DataFrame({
-        'PP_A_An1': data_pps[:,0], 'PP_A_An2': data_pps[:, 1],
-        'PP_A_Cat1': data_pps[:,2], 'PP_A_Cat2': data_pps[:,3],
+        'PP_A:An1': data_pps[:,0], 'PP_A:An2': data_pps[:, 1],
+        'PP_A:Cat1': data_pps[:,2], 'PP_A:Cat2': data_pps[:,3],
         'PP_B1': data_pps[:,4], 'PP_B2': data_pps[:,5],
         'PP_C1': data_pps[:,6], 'PP_C2': data_pps[:,7],
         'PP_D1': data_pps[:,8], 'PP_D2': data_pps[:,9],
-        'IPF_A_An1': data_ipfA_An, 'IPF_A_Cat1': data_ipfA_Cat,
+        'IPF_A:An1': data_ipfA_An, 'IPF_A:Cat1': data_ipfA_Cat,
         'IPF_B1': data_ipfB,
         'IPF_C1': data_ipfC
     })
@@ -54,6 +71,13 @@ def generate_dataset(num_data, sigma, seed = 1234):
 
 
 def get_gt_direct(args):
+    """
+    Get ground truth attributions for generated system (direct)
+    :param
+        args: Weights of A_Anode, A_Cathode, B, C, D respectively
+    :return:
+        gt_direct: [list] Ground truth attributions for direct boundary
+    """
     wA_A, wA_C, wB, wC, wD = args
     sum_wA_A = sum(wA_A)
     sum_wA_C = sum(wA_C)
@@ -69,6 +93,13 @@ def get_gt_direct(args):
     return gt_direct
 
 def get_gt_indirect(args):
+    """
+    Get ground truth attributions for generated system (indirect)
+    :param
+        args: Weights of A_Anode, A_Cathode, B, C, D respectively
+    :return:
+        gt_indirect: [list] Ground truth attributions for indirect boundary
+    """
     wA_A, wA_C, wB, wC, wD = args
 
     wDC = [wD[-1] * c for c in wC]
@@ -85,6 +116,9 @@ def get_gt_indirect(args):
 
 def compare_explanation(features, gt_direct, gt_indirect,
                         boundary_importances, shap_values, lime_values, ig_values, config = 'raw'):
+    """
+    Compare the explanation results from Shapley flow and other benchmark algorithms.
+    """
     gt_direct_norm = gt_direct / sum(gt_direct)
     gt_indirect_norm = gt_indirect / sum(gt_indirect)
 
@@ -171,6 +205,9 @@ def compare_rank(features, gt_indirect,
                  lime_values_mean_norm,
                  ig_values_mean_norm,
                  dist = 'kendalltau'):
+    """
+    Compare the Kendall-tau coefficient from Shapley flow and other benchmark algorithms.
+    """
     feature_pp_indices = ['PP' in feature for feature in features]
 
     gt_indirect = np.array(gt_indirect)[feature_pp_indices].tolist()

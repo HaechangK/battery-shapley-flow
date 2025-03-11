@@ -5,14 +5,13 @@ from Virtual_dataset import *
 now = time.time()
 
 # %% Basic arguments
-BENCHMARK = False
-SHAPFLOW_INTERPRET = True
+BENCHMARK = False # Whether to compare with benchmark algorithms: SHAP, LIME, Integrated gradients
+SHAPFLOW_INTERPRET = True # Whether to interpret the model with Shapley flow
 TARGET = 'Virtual - battery'
 
 # Arguments for generating synthetic dataset
-NUM_DATA = 1000
-NOISE = 0.4
-DROPOUT = 0.0
+NUM_DATA = 1000 # Number of data to be generated
+NOISE = 0.4 # Noise parameter which is varied from 0.0 to 0.4 at the paper
 
 # %% Random seed for reproducibility
 np.random.seed(21)
@@ -24,7 +23,7 @@ seed = seeds[0]
 for seed in seeds:
     print("Number of synthetic data     : ", NUM_DATA)
     print("Benchmark with other methods : ", BENCHMARK)
-    print("Task                         : ", f'{TARGET} with noise {NOISE} and dropout {DROPOUT}')
+    print("Task                         : ", f'{TARGET} with noise {NOISE}')
 
     # %%
     """
@@ -71,7 +70,7 @@ for seed in seeds:
 
         edge_credit = SHF.Graph_explain()
         importance_matrix = SHF.importance_matrix(edge_credit)
-        SHF.draw_graph(max_display = 20)
+        SHF.draw_graph(max_display = 20) # Visualize Fig 6.(a)
 
         # %%
         rank_boundaries = [0, -1]
@@ -108,6 +107,7 @@ for seed in seeds:
         shf_indirect = np.absolute(boundary_importances[0]).mean(axis=0)
         shf_indirect_norm = shf_indirect / shf_indirect.sum()
 
+        # Save the comparative results
         results = [features, SHF.r2mean, gt_direct, gt_indirect, shf_direct_norm, shf_indirect_norm,
                    shap_values_mean_norm, lime_values_mean_norm, ig_values_mean_norm]
         virtual_dataset_dir = os.path.join(data_dir, f'{TARGET}_{NOISE}')

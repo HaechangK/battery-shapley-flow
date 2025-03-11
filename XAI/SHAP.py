@@ -31,13 +31,12 @@ os.makedirs(data_shap_dir, exist_ok=True)
 class SHAP:
     def __init__(self, X, y, target, interventional = True):
         """
-        Args:
+        :argument
             X: [pd.DataFrame] Data to be interpreted
-            target: [str] Target variable string
             y: [pd.Series] Vector of target variables
+            target: [str] Target variable string
             interventional: [bool] Whether to perform interventional SHAP. If false, perform tree_path_dependent SHAP
         """
-        model = None
         self.X = X
         self.y = y
         self.target = target
@@ -54,9 +53,9 @@ class SHAP:
     def __call__(self, load_data = False):
         """
         Computes SHAP values for all features
-        Args:
+        :argument
             load_data: [bool] Whether to load the saved SHAP data. If false, compute the SHAP values
-        Returns:
+        :returns
             self.result.values: [np.ndarray] Matrix containing SHAP values of all features and instances
         """
         # returns SHAP values matrix
@@ -91,7 +90,7 @@ class SHAP:
     def SHAP_plot(self, visuals, add_info = '', max_display = 10):
         """
         Provides visual aids for the explanation.
-        Args:
+        :argument
             visuals: [List] List of visual aids preferred to be drawn.
             add_info: [str] Additional information for saving plots
             max_display: [int] Maximum number of features to display
@@ -105,7 +104,7 @@ class SHAP:
             Dependence: Attributions against feature values, colored by other feature values(global)
         """
         savename = bar_dir + f'/[{self.target}] Bar{add_info}.png'
-        feature_order = shap.plots.barbyme(self.result,
+        feature_order = shap.plots.bar(self.result,
                                        savename=savename,
                                        max_display = max_display,
                                        )
