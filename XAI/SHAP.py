@@ -58,7 +58,6 @@ class SHAP:
         :returns
             self.result.values: [np.ndarray] Matrix containing SHAP values of all features and instances
         """
-        # returns SHAP values matrix
         print("Waiting for SHAP analysis...", end='')
 
         if load_data:

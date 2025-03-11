@@ -388,7 +388,6 @@ class SHAPflow():
             pickle.dump(graph_str, file)
         print("Done!")
 
-
     def load_agraph(self, savename):
         """
         Loads AGraph object
@@ -405,7 +404,6 @@ class SHAPflow():
         print("Done!")
         return loaded_graph
 
-
     def node2str(self, graph):
         """
         Generates dictionary that brings nodes from node names
@@ -418,7 +416,6 @@ class SHAPflow():
         for node in graph.nodes:
             n2s[node.name] = node
         return n2s
-
 
     # %% Rank functions
     def rank2(self, nodename):
