@@ -1,10 +1,20 @@
 '''
 This file contains implementation of the Shapley Flow algorithm
-Author: Jiaxuan Wang
+Original Author: Jiaxuan Wang (Author of Shapley Flow)
 
-flow3: def run_bruteforce_sampling(self)에서 source를 모든 source들 대신 우리가 보고자 하는 하나의 source node로 대체
+Our flow3.py modified the original code of flow.py at Shapley flow module,
+by appending multiple additional features.
+1. Impact pathway visualization: We appended argument "source" to 'run_bruteforce_sampling" function,
+    to tract the impact pathway of certain feature we are interested in.
+    'source==None' will give the original results of Shapley flow
 
-The word baseline is used interchangeably with background
+2. The XGBoost model for training causal links are based on 8:2 train_test_split,
+    and we can easily get access to the predictive performances of these models.
+
+3. For enhanced readibility, we repositioned the nodes of causal graph hierarchically,
+    based on the 'rank' attribute we assign to each variable.
+
+4. Adjusted font and its color.
 '''
 import subprocess
 import time
@@ -420,7 +430,7 @@ class CreditFlow:
             self.visualize = False
 
     def draw(self, idx=-1, max_display=None, format_str="{:.2f}",
-             edge_credit=None, show_fg_val=True, pre = None, savename='', rank = None):
+             edge_credit=None, show_fg_val=True, savename='', rank = None):
         '''
         assumes using ipython notebook
         idx: the index of target to visualize, if negative assumes sum,
@@ -433,7 +443,6 @@ class CreditFlow:
                               idx=idx,
                               max_display=max_display,
                               show_fg_val=show_fg_val,
-                              pre = pre,
                               rank = rank)
         # save_graph(dot, name= savename)
         viz_graph(dot, savename)
@@ -874,7 +883,6 @@ class CreditFlow:
         '''
         from pygraphviz import AGraph        
         self.rankdir = self.rankdir if hasattr(self, "rankdir") else "TB"
-        # G = AGraph(directed=True, rankdir=self.rankdir)
         G = AGraph(directed=True, rankdir=self.rankdir, strict = True)
 
         edge_values = []
@@ -915,15 +923,12 @@ class CreditFlow:
                 if self.fold_noise and node1.is_noise_node:
                     continue # only visualize non noise node
 
-                # red = "#ff0051"
-                # blue = "#008bfb"
-                # if idx < 0:
-                #     color = f"{red}ff"
-                # else:
-                #     color = f"{blue}ff" if v < 0 else f"{red}ff" # blue and red
-
-                color = '#008000' if node1.name[0] == 'X' and node2.name[:2] == 'YE' else '#FF4500'
-
+                red = "#ff0051"
+                blue = "#008bfb"
+                if idx < 0:
+                    color = f"{red}ff"
+                else:
+                    color = f"{blue}ff" if v < 0 else f"{red}ff" # blue and red
                 
                 max_w = 5
                 min_w = 0.05
@@ -939,7 +944,6 @@ class CreditFlow:
                     if "_" in key:
                         parts = key.split("_")
                         if len(parts) == 2 and parts[1].isdigit():
-                            # return f"${{{parts[0]}}}_{{{parts[1]}}}$"
                             return f"{parts[0]}<SUB>{parts[1]}</SUB>"
                     return key
 
@@ -991,7 +995,7 @@ class CreditFlow:
         
     def credit2dot(self, raw_edge_credit,
                    format_str="{:.2f}", idx=-1,
-                   max_display=None, show_fg_val=True, pre = None, rank = None):
+                   max_display=None, show_fg_val=True, rank = None):
         '''
         convert the graph to pydot graph for visualization
         e.g.:
@@ -1060,12 +1064,6 @@ class CreditFlow:
                             for i, ec in enumerate(raw_edge_credit.ecs):
                                 edge_credit.ecs[i][node1.name][node2.name] += \
                                     ec[name1][name2][idx]
-                        
-        # Descaling process
-        if pre is not None:
-            for node1, d in raw_edge_credit.items():
-                for node2, val in d.items():
-                    edge_credit[node1][node2] = pre.descale_yshap(edge_credit[node1][node2])
 
         G = self.credit2dot_pygraphviz(edge_credit, format_str,
                                           new_idx, max_display,
@@ -1095,14 +1093,14 @@ class CreditFlow:
         # Add invisible edges to enforce order of subgraphs
         sorted_ranks = sorted(rank_groups.keys())
         for i in range(len(sorted_ranks) - 1):
-            for node1 in rank_groups[sorted_ranks[
-                i]]:
+            for node1 in rank_groups[sorted_ranks[i]]:
                 for node2 in rank_groups[sorted_ranks[i + 1]]:
                     if not G.has_edge(node1, node2):
                         G.add_edge(node1, node2, weight=10, style='invis', constraint = True)
 
         # Compute the layout using the dot algorithm
-        G.graph_attr['rankdir'] = 'LR'
+        G.graph_attr['rankdir'] = 'TB'
+        # G.graph_attr['rankdir'] = 'LR'
         # G.layout(prog="dot")
 
         return G
@@ -1348,7 +1346,6 @@ class GraphExplainer:
             
         cf = CreditFlow(self.graph, nruns=self.nruns, rankdir=rankdir,
                         silent=self.silent, fold_noise = True, **kwargs)
-        # cf.run(method, len_bg=len(self.bg), method_type = 'path')
         cf.run(method, len_bg=len(self.bg), source=source)
         return cf
 
